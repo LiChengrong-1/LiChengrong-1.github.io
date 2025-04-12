@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红军长征专题图</title>
+
+    <style>
+        html, body {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            font-family: "Segoe UI", system-ui;
+            background-color: #ff0000;
+            overflow: hidden;
+        }
+        
+        /* 顶部导航栏 */
+        #header {
+            height: 40px;
+            background: linear-gradient(90deg, #fff541, #ffffff);
+            color: rgb(255, 238, 0);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 0px rgb(255, 255, 255);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-right: 20px;
+            text-decoration: none;
+            color: rgb(46, 41, 41);
+        }
+        
+        .header-title:hover {
+            text-decoration: underline;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 15px;
+            flex-grow: 1;
+            justify-content: flex-start;
+        }
+        
+        .header-nav a {
+            color: rgb(46, 41, 41);
+            text-decoration: none;
+            font-size: 14px;
+            margin-right: 15px;
+            transition: color 0.3s;
+        }
+        
+        .header-nav a:hover {
+            color: rgb(46, 41, 41);
+        }
+        
+        /* 主容器 */
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 40px);
+            margin-top: 40px;
+        }
+        
+        /* 地图区域 */
+        #map-container {
+            flex: 1;
+            position: relative;
+            background: #ffffff;
+            border: 0px solid #ffffff;
+        }
+        
+        #mapViewDiv {
+            height: 100%;
+            width: 100%;
+        }
+        
+        /* 底部底图库 - 高度减小 */
+        #basemap-gallery {
+            height: 145px; 
+            background:  #fff98d;
+            padding: 6px 20px; /* 减小上下内边距 */
+            background:  #fff98d;
+            box-shadow: 0 -0px 0px rgb(255, 221, 0);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .basemap-gallery-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: -10px; /* 减小下边距 */
+            color: rgb(46, 41, 41);
+        }
+        
+       
+        
+        /* 分类标题 */
+        .category-title {
+            font-size: 13px;
+            color: #fff98d;
+            margin: 18px 0; /* 减小上下边距 */
+            padding-left: 5px;
+            border-left: 3px solid #13c100;
+        }
+        /* 图例样式调整 */
+        .esri-legend {
+            font-size: 12px !important;
+            max-width: 200px !important;
+        }
+        .esri-legend__service {
+            padding: 5px !important;
+            background:  #fffba5;
+        }
+    </style>
+    
+    <!-- Load ArcGIS Maps SDK for JavaScript -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.32/"></script>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div id="header">
+        <a href="https://desktop.arcgis.com/zh-cn/desktop/index.html" class="header-title">红军长征专题图</a>
+        <div class="header-nav">
+            <a href="https://www.geosceneonline.cn/geoscene/webapps/home">首页</a>
+            <a href="http://www.81.cn/2021zt/2021-10/17/content_10099972.htm">长征简介</a>
+            <a href="https://www.geosceneonline.cn/geoscene/webapps/gallery">资源中心</a>
+            <a href="https://www.geosceneonline.cn/geoscene/webapps/mapViewer">在线制图</a>
+            <a href="https://developers.arcgis.com/javascript/latest/">帮助</a>
+        </div>
+    </div>
+    
+    <!-- 主容器 -->
+    <div id="main-container">
+        <!-- 地图区域 -->
+        <div id="map-container">
+            <div id="mapViewDiv"></div>
+        </div>
+        
+        <!-- 底部底图库 -->
+        <div id="basemap-gallery">
+            <div class="basemap-gallery-title">底图库</div>
+        </div>
+    </div>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/ScaleBar",
+            "esri/widgets/Legend",
+            "esri/widgets/Search",
+            "esri/widgets/LayerList",
+            "esri/widgets/Expand",
+            "esri/layers/FeatureLayer",
+            "esri/widgets/BasemapGallery",
+            "esri/Basemap"
+        ], function(Map, MapView, ScaleBar, Legend, Search, LayerList, Expand, FeatureLayer, BasemapGallery, Basemap) {
+            
+            // 创建地图实例
+            const map = new Map({
+                basemap: "streets"  // 默认底图
+            });
+            
+            // 创建四个红军长征路线图层
+            const firstArmyLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/红一方面军长征路线_LCR/FeatureServer/0",
+                title: "红一方面军长征路线",
+                visible: true
+            });
+            
+            const secondArmyLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/红二方面军长征路线_LCR/FeatureServer/0",
+                title: "红二方面军长征路线",
+                visible: true
+            });
+            
+            const fourthArmyLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/红四方面军长征路线_LCR/FeatureServer/0",
+                title: "红四方面军长征路线",
+                visible: true
+            });
+            
+            const twentyFifthArmyLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/红二十五方面军长征路线_LCR/FeatureServer/0",
+                title: "红二十五方面军长征路线",
+                visible: true
+            });
+            
+            // 将图层添加到地图
+            map.addMany([firstArmyLayer, secondArmyLayer, fourthArmyLayer, twentyFifthArmyLayer]);
+            
+            // 创建地图视图
+            const view = new MapView({
+                container: "mapViewDiv",
+                map: map,
+                center: [108.1, 31],  // 中心坐标
+                zoom: 4
+            });
+            
+            // 添加比例尺
+            const scaleBar = new ScaleBar({
+                view: view,
+                unit: "metric"
+            });
+            view.ui.add(scaleBar, {
+                position: "bottom-left"
+            });
+            
+            // 添加图例
+            const legend = new Legend({
+                view: view
+            });
+            
+            // 将图例放入可折叠控件中
+            const legendExpand = new Expand({
+                view: view,
+                content: legend,
+                expandIconClass: "esri-icon-legend",
+                expandTooltip: "图例",
+                expanded: true
+            });
+            view.ui.add(legendExpand, "bottom-right");
+            
+            // 添加搜索框
+            const searchWidget = new Search({
+                view: view,
+                popupEnabled: true,
+                includeDefaultSources: true,
+                sources: [{
+                    placeholder: "搜索地点...",
+                    countryCode: "CN"  // 限制在中国范围内搜索
+                }]
+            });
+            view.ui.add(searchWidget, {
+                position: "top-right",
+                index: 0
+            });
+            
+            // 添加图层列表
+            const layerList = new LayerList({
+                view: view
+            });
+            
+            // 将图层列表放入可折叠控件中
+            const layerListExpand = new Expand({
+                view: view,
+                content: layerList,
+                expandIconClass: "esri-icon-layers",
+                expandTooltip: "图层列表",
+                expanded: false
+            });
+            view.ui.add(layerListExpand, "top-left");
+            
+            // 添加底图库
+            const basemapGallery = new BasemapGallery({    
+                view: view,    
+                container: "basemap-gallery",
+                visibleElements: {
+                    title: true
+                }
+            });    
+            
+            
+            // 窗口大小变化时调整地图
+            window.addEventListener("resize", () => {
+                view.resize();
+            });
+            
+            // 等待视图加载完成
+            view.when(() => {
+                console.log("地图加载完成");
+            });
+        });
+    </script>
+</body>
+</html>
